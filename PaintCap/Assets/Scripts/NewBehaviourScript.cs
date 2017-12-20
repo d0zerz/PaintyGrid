@@ -1,12 +1,17 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
+
 
 public class NewBehaviourScript : MonoBehaviour {
     private static int mouseCount = 0;
-    
-	// Use this for initialization
-	void Start () {
+
+    public Tilemap tileMap;
+    public TileBase painterTile;
+
+    // Use this for initialization
+    void Start () {
         Debug.Log("Startup NewBehaviourScript");
 	}
 	
@@ -21,12 +26,11 @@ public class NewBehaviourScript : MonoBehaviour {
         if (Input.GetMouseButtonDown(0))
         {
             mouseCount++;
-            Debug.Log("Moused " + mouseCount);
-        }
-        if (Input.GetMouseButtonDown(0))
-        {
-            mouseCount++;
-            Debug.Log("Moused " + mouseCount + " " + Input.mousePosition);
+            //GridLayout gridLayout = transform.parent.GetComponent<GridLayout>();
+            Vector3Int cellPosition = tileMap.LocalToCell(Input.mousePosition);
+            Debug.Log("Moused " + mouseCount + " " + cellPosition + " " + Input.mousePosition);
+            Debug.Log("RedVal: " + GameManager.instance.getRedVal());
+            tileMap.SetTile(new Vector3Int(0, 0, 0), painterTile);
         }
     }
 
