@@ -6,7 +6,7 @@ using System.Collections.Generic;       //Allows us to use Lists.
 public class GameManager : MonoBehaviour
 {
     public static GameManager instance = null;              //Static instance of GameManager which allows it to be accessed by any other script.
-    private int redVal = 0;                                  //Current level number, expressed in game as "Day 1".
+    private int redVal = 0;
 
     public int getRedVal()
     {
