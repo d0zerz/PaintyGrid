@@ -2,14 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Loader : MonoBehaviour {
+namespace PaintCap
+{
+	public class Loader : MonoBehaviour {
 
-    public GameObject gameManager;
+	    public GameObject gameManager;
 
-    void Awake () {
-        if (GameManager.instance == null)
+	    void Awake () {
+	        if (GameManager.instance == null)
 
-            //Instantiate gameManager prefab
-            Instantiate(gameManager);
-    }
+	            //Instantiate gameManager prefab
+	            Instantiate(gameManager);
+	    }
+	}
 }

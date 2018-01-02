@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-
 public class NewBehaviourScript : MonoBehaviour {
     private static int mouseCount = 0;
 
@@ -29,7 +28,7 @@ public class NewBehaviourScript : MonoBehaviour {
             //GridLayout gridLayout = transform.parent.GetComponent<GridLayout>();
             Vector3Int cellPosition = tileMap.LocalToCell(Input.mousePosition);
             Debug.Log("Moused " + mouseCount + " " + cellPosition + " " + Input.mousePosition);
-            Debug.Log("RedVal: " + GameManager.instance.getRedVal());
+			Debug.Log("tilemap bounds: " + tileMap.size + " "  + tileMap.localBounds.center + " " + tileMap.localBounds.min);
             tileMap.SetTile(new Vector3Int(0, 0, 0), painterTile);
         }
     }

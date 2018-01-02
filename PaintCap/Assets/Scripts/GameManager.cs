@@ -1,50 +1,63 @@
 ﻿using UnityEngine;
+using UnityEngine.Tilemaps;
 using System.Collections;
 
 using System.Collections.Generic;       //Allows us to use Lists. 
 
-public class GameManager : MonoBehaviour
+namespace PaintCap
 {
-    public static GameManager instance = null;              //Static instance of GameManager which allows it to be accessed by any other script.
-    private int redVal = 0;
+	public class GameManager : MonoBehaviour
+	{
+	    public static GameManager instance = null;              //Static instance of GameManager which allows it to be accessed by any other script.
 
-    public int getRedVal()
-    {
-        return redVal;
-    }
+		public Tilemap backgroundTilemap;
+		public TileManager tileManager;
+		public Transform camera;
 
-    //Awake is always called before any Start functions
-    void Awake()
-    {
-        //Check if instance already exists
-        if (instance == null)
+	    private int redVal = 0;
+		private BoardState boardState;
 
-            //if not, set instance to this
-            instance = this;
+	    public int getRedVal()
+	    {
+	        return redVal;
+	    }
 
-        //If instance already exists and it's not this:
-        else if (instance != this)
+	    //Awake is always called before any Start functions
+	    void Awake()
+	    {
+	        //Check if instance already exists
+			if (instance == null) {
+				//if not, set instance to this
+				instance = this;
+				boardState = new BoardState (backgroundTilemap, tileManager);
+			}
 
-            //Then destroy this. This enforces our singleton pattern, meaning there can only ever be one instance of a GameManager.
-            Destroy(gameObject);
+	        //If instance already exists and it's not this:
+	        else if (instance != this)
 
-        //Sets this to not be destroyed when reloading scene
-        DontDestroyOnLoad(gameObject);
+	            //Then destroy this. This enforces our singleton pattern, meaning there can only ever be one instance of a GameManager.
+	            Destroy(gameObject);
 
-        //Call the InitGame function to initialize the first level 
-        InitGame();
-    }
+	        //Sets this to not be destroyed when reloading scene
+	        DontDestroyOnLoad(gameObject);
 
-    //Initializes the game for each level.
-    void InitGame()
-    {
-        Debug.Log("init game");
-    }
+	        //Call the InitGame function to initialize the first level 
+	        InitGame();
+	    }
 
-    //Update is called every frame.
-    void Update()
-    {
-        redVal++;
-        if (redVal > 255) redVal = 0;
-    }
+	    void InitGame()
+	    {
+	        Debug.Log("init game");
+			boardState.initBoard(new Vector2Int(20,20));
+			boardState.paintBoardState ();
+			camera.position = new Vector3(10, 10, -10);
+	    }
+
+	    //Update is called every frame.
+	    void Update()
+	    {
+	        redVal++;
+	        if (redVal > 255) redVal = 0;
+	    }
+	}
 }
