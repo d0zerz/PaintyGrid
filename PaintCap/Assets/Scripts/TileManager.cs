@@ -11,7 +11,7 @@ namespace PaintCap
 
 		public Tile getTileByType(TileType type) 
 		{
-			return tiles [(int)type - 1];
+			return tiles[(int)type];
 		}
 
 		// Use this for initialization

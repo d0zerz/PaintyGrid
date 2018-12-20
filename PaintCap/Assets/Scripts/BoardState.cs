@@ -21,7 +21,7 @@ namespace PaintCap
 			Debug.Log ("Painting board state");
 
 			// paint background tilemap
-			backgroundMap.ClearAllTiles ();
+			//backgroundMap.ClearAllTiles ();
 			for (int x = 0; x < boardDimensions.x; x++) {
 				for (int y = 0; y < boardDimensions.y; y++) {
 					TileType type = boardState [x, y].getTileBackground ();
@@ -31,11 +31,23 @@ namespace PaintCap
 			}
 		}
 
-		public void initBoard(Vector2Int board) {
-			Debug.Log ("Init board");
+        public void setTile(Vector3Int position, TileType tileType)
+        {
+            TileState state = new TileState(tileType);
+            boardState[position.x, position.y] = state;
+        }
+
+        public void setTileToBlack(Vector3Int position)
+        {
+            TileState state = new TileState(TileType.BLACK_TILE);
+            boardState[position.x, position.y] = state;
+        }
+
+        public void initBoard(Vector2Int board) {
+			Debug.Log ("Init board jack");
 			boardDimensions = board;
 			initBoardRandomly ();
-			DrawLine (new Vector3Int (-100, -100, 1), new Vector3Int (100, 100, 1), Color.cyan, 1);
+			//DrawLine (new Vector3Int (-100, -100, 1), new Vector3Int (100, 100, 1), Color.cyan, 1);
 		}
 			
 		private void initBoardRandomly() {
@@ -43,24 +55,9 @@ namespace PaintCap
 			System.Random rnd = new System.Random();
 			for (int x = 0; x < boardDimensions.x; x++) {
 				for (int y = 0; y < boardDimensions.y; y++) {
-					boardState [x, y] = new TileState((TileType)rnd.Next(1, 4));
+					boardState [x, y] = new TileState((TileType)rnd.Next(0, 3));
 				}
 			}
 		}
-
-		void DrawLine(Vector3 start, Vector3 end, Color color, float duration = 0.2f)
-		{
-			GameObject myLine = new GameObject();
-			myLine.transform.position = start;
-			myLine.AddComponent<LineRenderer>();
-			LineRenderer lr = myLine.GetComponent<LineRenderer>();
-			lr.material = new Material(Shader.Find("Particles/Alpha Blended Premultiply"));
-			lr.SetColors(color, color);
-			lr.SetWidth(1f, 1f);
-			lr.SetPosition(0, start);
-			lr.SetPosition(1, end);
-			//GameObject.Destroy(myLine, duration);
-		}
-
 	}
 }
