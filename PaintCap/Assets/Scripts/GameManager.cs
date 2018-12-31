@@ -12,16 +12,13 @@ namespace PaintCap
 
 		public Tilemap backgroundTilemap;
 		public TileManager tileManager;
-		public Transform camera;
+		public Transform mainCam;
+		public ActiveColorManager acm;
+		public BombManager bombManager;
 
-	    private int redVal = 0;
-        private long gameCounter = 0;
         private BoardState boardState;
 
-	    public int getRedVal()
-	    {
-	        return redVal;
-	    }
+		private int gameCounter;
 
 	    //Awake is always called before any Start functions
 	    void Awake()
@@ -51,44 +48,9 @@ namespace PaintCap
 	        Debug.Log("init game");
 			boardState.initBoard(new Vector2Int(20,20));
 			boardState.paintBoardState ();
-			camera.position = new Vector3(10, 10, -10);
+			//camera.position = new Vector3(10, 10, -10);
+
 	    }
-
-
-        void UpdateActiveColor()
-        {
-            redVal++;
-            if (redVal > 255) redVal = 0;
-
-        }
-
-        void DrawLine(Vector3 start, Vector3 end, Color color, float duration = 0.2f)
-        {
-            GameObject myLine = new GameObject();
-            myLine.transform.position = start;
-            myLine.AddComponent<LineRenderer>();
-            LineRenderer lr = myLine.GetComponent<LineRenderer>();
-            lr.material = new Material(Shader.Find("UI/Default"));
-            lr.startWidth = 5f;
-            lr.endWidth = 5f;
-            lr.startColor = color;
-            lr.endColor = color;
-            lr.SetPosition(0, start);
-            lr.SetPosition(1, end);
-            lr.useWorldSpace = false;
-//            GameObject.Destroy(myLine, duration);
-        }
-
-        void DrawTopColors()
-        {
-            Color color = new Color(.5F, .5F, .5F);
-
-
-            int xPos = Screen.width / 2;
-            int yPos = Screen.height;
-            Debug.Log(string.Format("drawLine xPos {0} yPos {1}", xPos, yPos));
-            DrawLine (new Vector3Int (xPos - 50, yPos, -1), new Vector3Int (xPos + 50, yPos - 100, -1), Color.cyan, 5000f);
-        }
 
         //Update is called every frame.
         void Update()
@@ -96,16 +58,17 @@ namespace PaintCap
             gameCounter++;
             if (gameCounter % 100 == 0)
             {
-                DrawTopColors();
-                Debug.Log(string.Format("gameCounter {0}", gameCounter));
+                //DrawTopColors();
+                //Debug.Log(string.Format("gameCounter {0}", gameCounter));
             }
 
             if (Input.GetMouseButtonDown(0))
             {
+				bombManager.addBomb (Camera.main.ScreenToWorldPoint(Input.mousePosition), acm.getCurColor());
                 Vector3Int pos = Vector3Int.FloorToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
                 Debug.Log(string.Format("Co-ords of mouse is [X: {0} Y: {1}]", pos.x, pos.y));
-                boardState.setTileToBlack(pos);
-                boardState.paintBoardState();
+                //boardState.setTileToBlack(pos);
+                //boardState.paintBoardState();
             }
         }
 	}
