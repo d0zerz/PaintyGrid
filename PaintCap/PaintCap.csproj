@@ -219,12 +219,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Scripts\ActiveColorManager.cs" />
     <Compile Include="Assets\Scripts\BoardState.cs" />
+    <Compile Include="Assets\Scripts\BombManager.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
+    <Compile Include="Assets\Scripts\GameTile.cs" />
     <Compile Include="Assets\Scripts\Loader.cs" />
     <Compile Include="Assets\Scripts\NewBehaviourScript.cs" />
-    <Compile Include="Assets\Scripts\Redtile.cs" />
     <Compile Include="Assets\Scripts\TileManager.cs" />
+    <Compile Include="Assets\Scripts\Tiles\BlueRedTile.cs" />
+    <Compile Include="Assets\Scripts\Tiles\BlueTile.cs" />
+    <Compile Include="Assets\Scripts\Tiles\GreenBlueTile.cs" />
+    <Compile Include="Assets\Scripts\Tiles\GreenTile.cs" />
+    <Compile Include="Assets\Scripts\Tiles\RedGreenTile.cs" />
+    <Compile Include="Assets\Scripts\Tiles\RedTile.cs" />
     <Compile Include="Assets\Scripts\TileState.cs" />
     <Compile Include="Assets\Scripts\TileType.cs" />
   </ItemGroup>

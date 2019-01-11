@@ -7,22 +7,30 @@ namespace PaintCap
 	{
 		public LineRenderer colorLine;
 		public LineRenderer solidColorLine;
+        public Transform colorLinesTransform;
 
 		private float timer = 0.0f;
 		private float curTimeInCycle = 0.0f;
 		private const float WAIT_TIME = 0.01f;
 		private const float CYCLE_TIME = 8f; 
 
-		//TODO: make dyamic from colorLine's length
-		private const float LINE_LENGTH = 6f; 
+		//TODO: make dyamic from colorLine's initial length
+		private const float LINE_LENGTH = 10f; 
 
-		private const float ONE_THIRD = 1f/3f;
-		private const float TWO_THIRDS = 2f/3f;
+		private const float ONE_THIRD = 1f / 3f;
+        private const float ONE_SIXTH = 1f / 6f;
+        private const float TWO_THIRDS = 2f / 3f;
 
-		public ActiveColorManager ()
+        private Vector3 origLinePoint;
+
+        public ActiveColorManager ()
 		{
-			
-		}
+        }
+
+        void Awake()
+        {
+            origLinePoint = colorLinesTransform.position;
+        }
 
 		//Update is called every frame.
 		void Update()
@@ -49,9 +57,9 @@ namespace PaintCap
 		private void moveColorLineToPct(float pct) 
 		{
 			float lineXPos = LINE_LENGTH * pct;
-			Vector3 curPos = colorLine.transform.position;
-			Vector3 newPos = new Vector3(lineXPos, curPos.y, curPos.z);
-			colorLine.transform.position = newPos;
+			Vector3 curPos = colorLinesTransform.position;
+			Vector3 newPos = new Vector3(origLinePoint.x + lineXPos, curPos.y, curPos.z);
+            colorLinesTransform.position = newPos;
 		}
 
 		private void changeSolidColor(float pct)
@@ -66,22 +74,53 @@ namespace PaintCap
 			float bVal=0f;
 			float gVal=0f;
 
-			if (pct < ONE_THIRD) {
-				rVal = 1 - (pct / ONE_THIRD);
-				bVal = pct / ONE_THIRD; 
-			}
-			else if (pct < TWO_THIRDS) {
-				float relPct = pct - ONE_THIRD;
-				bVal = 1 - relPct / ONE_THIRD; 
-				gVal = relPct / ONE_THIRD;
-			}
-			else {
-				float relPct = pct - TWO_THIRDS;
-				gVal = 1- relPct / ONE_THIRD;
-				rVal = relPct / ONE_THIRD;
-			}
-			//Debug.Log(string.Format("pct {3} r {0} g {1} b {2}", rVal, gVal, bVal, pct));
-			return new Color(rVal, gVal, bVal, 1f);
+            // Color vals stay at 100% in the 1/6th range surrounding their peak for more vibrant colors! pretty! aayyay!
+            // From 0 - 1/6 - 1/3 - 3/6 - 2/3 - 5/6 - 0
+            //     R=1        B=1         G=1
+            float distFromThird = Math.Abs(ONE_THIRD - pct);
+            float distFrom2Third = Math.Abs(TWO_THIRDS - pct);
+            float distFrom0 = pct >= (1f/2f) ? 1f - pct : pct;
+
+            //Debug.Log(string.Format("pct {3}, 0 {0} 1 {1} 2 {2} ", distFrom0, distFromThird, distFrom2Third, pct));
+            //TODO:  there's got to be a better way?
+            if (distFrom0 <= ONE_SIXTH )
+            {
+                rVal = 1;
+                if (pct >= 1 - ONE_SIXTH)
+                {
+                    bVal = distFrom0 / ONE_SIXTH;
+                }
+                else
+                {
+                    gVal = distFrom0 / ONE_SIXTH;
+                }
+            }
+            else if (distFromThird <= ONE_SIXTH)
+            {
+                gVal = 1;
+                if (pct > ONE_THIRD)
+                {
+                    bVal = distFromThird / ONE_SIXTH;
+                }
+                else
+                {
+                    rVal = distFromThird / ONE_SIXTH;
+                }
+            }
+            else
+            {
+                bVal = 1;
+                if (pct > TWO_THIRDS)
+                {
+                    rVal = distFrom2Third / ONE_SIXTH;
+                }
+                else
+                {
+                    gVal = distFrom2Third / ONE_SIXTH;
+                }
+            }
+            //Debug.Log(string.Format("pct {3} r {0} g {1} b {2}", rVal, gVal, bVal, pct));
+            return new Color(rVal, gVal, bVal, 1f);
 		}
 			
 

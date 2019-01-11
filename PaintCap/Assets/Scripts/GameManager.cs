@@ -8,7 +8,7 @@ namespace PaintCap
 {
 	public class GameManager : MonoBehaviour
 	{
-	    public static GameManager instance = null;              //Static instance of GameManager which allows it to be accessed by any other script.
+	    public static GameManager instance = null;  //Static instance of GameManager which allows it to be accessed by any other script.
 
 		public Tilemap backgroundTilemap;
 		public TileManager tileManager;
@@ -38,8 +38,6 @@ namespace PaintCap
 
 	        //Sets this to not be destroyed when reloading scene
 	        DontDestroyOnLoad(gameObject);
-
-	        //Call the InitGame function to initialize the first level 
 	        InitGame();
 	    }
 
@@ -49,7 +47,6 @@ namespace PaintCap
 			boardState.initBoard(new Vector2Int(20,20));
 			boardState.paintBoardState ();
 			//camera.position = new Vector3(10, 10, -10);
-
 	    }
 
         //Update is called every frame.
@@ -64,11 +61,12 @@ namespace PaintCap
 
             if (Input.GetMouseButtonDown(0))
             {
-				bombManager.addBomb (Camera.main.ScreenToWorldPoint(Input.mousePosition), acm.getCurColor());
-                Vector3Int pos = Vector3Int.FloorToInt(Camera.main.ScreenToWorldPoint(Input.mousePosition));
-                Debug.Log(string.Format("Co-ords of mouse is [X: {0} Y: {1}]", pos.x, pos.y));
-                //boardState.setTileToBlack(pos);
-                //boardState.paintBoardState();
+                Vector3 pointClicked = Camera.main.ScreenToWorldPoint(Input.mousePosition);
+                TileState tileState = boardState.getTileState(pointClicked);
+                Color color = tileState.getGameTile().getTileColor();
+                TileState bestTileMatch = boardState.getNearestMatch(pointClicked, acm.getCurColor());
+                bombManager.addBomb(pointClicked, bestTileMatch.getTileMiddle(), acm.getCurColor());
+                Debug.Log(string.Format("Co-ords of mouse is [X: {0} Y: {1}] {2}", pointClicked.x, pointClicked.y, color.ToString()));
             }
         }
 	}

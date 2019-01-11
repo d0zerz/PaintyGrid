@@ -1,19 +1,33 @@
 ﻿using System;
+using System.Collections.Generic;
+using UnityEngine.Tilemaps;
+using UnityEngine;
 
 namespace PaintCap
 {
 	public class TileState
 	{
-		private TileType tileBackground;
+		private GameTile backgroundTile;
+        private Vector2 tilePos;
 
-		public TileState (TileType tileType)
+		public TileState (GameTile backgroundTile, int x, int y)
 		{
-			this.tileBackground = tileType;
+			this.backgroundTile = backgroundTile;
+            this.tilePos = new Vector2(x, y);
 		}
 
-		public TileType getTileBackground() {
-			return tileBackground;
+		public GameTile getGameTile() {
+			return backgroundTile;
 		}
-	}
+
+        public Vector2 getTilePosition() {
+            return tilePos;
+        }
+
+        public Vector2 getTileMiddle()
+        {
+            return tilePos + new Vector2(.5f, .5f);
+        }
+    }
 }
 

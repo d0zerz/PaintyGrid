@@ -4,9 +4,12 @@ namespace PaintCap
 {
 	public enum TileType
 	{		
-		BLACK_TILE = 0,
-		RED_TILE = 1,
-		GREEN_TILE = 2
-	}
+		RED_TILE = 0,
+		GREEN_TILE = 1,
+        BLUE_TILE = 2,
+        BLUE_RED_TILE = 3,
+        GREEN_BLUE_TILE = 4,
+        RED_GREEN_TILE = 5,
+    }
 }
 

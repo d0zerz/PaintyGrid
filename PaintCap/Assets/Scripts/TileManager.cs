@@ -7,12 +7,41 @@ namespace PaintCap
 {
 	public class TileManager : MonoBehaviour {
 
-		public Tile[] tiles;
+        private const int NUM_TILES = 6;
+        public RedTile redTile;
+        public BlueTile blueTile;
+        public GreenTile greenTile;
+        public BlueRedTile blueRedTile;
+        public GreenBlueTile greenBlueTile;
+        public RedGreenTile redGreenTile;
 
-		public Tile getTileByType(TileType type) 
+        System.Random rnd = new System.Random();
+
+        public GameTile getTileByType(TileType type) 
 		{
-			return tiles[(int)type];
+			switch(type)
+            {
+                case TileType.RED_TILE: 
+                    return redTile;
+                case TileType.BLUE_TILE:
+                    return blueTile;
+                case TileType.GREEN_TILE:
+                    return greenTile;
+                case TileType.BLUE_RED_TILE:
+                    return blueRedTile;
+                case TileType.RED_GREEN_TILE:
+                    return redGreenTile;
+                case TileType.GREEN_BLUE_TILE:
+                    return greenBlueTile;
+                default:
+                    throw new System.Exception();
+            }
 		}
+
+        public GameTile getRandomTile()
+        {
+            return getTileByType((TileType)rnd.Next(0, NUM_TILES));
+        }
 
 		// Use this for initialization
 		void Start () {
