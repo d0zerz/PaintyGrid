@@ -7,13 +7,15 @@ using PaintCap;
 namespace PaintCap
 {
 	public class BoardState {
+
+        private const float MAX_MATCH_THRESHOLD = 1.2f;
+
 		private Vector2Int boardDimensions;
-		private Tilemap backgroundMap;
-		private TileManager tileManager;
+		
+        private TileManager tileManager;
 		private TileState[,] boardState;
 
-		public BoardState(Tilemap bgMap, TileManager tileManager) {
-			backgroundMap = bgMap;
+		public BoardState(TileManager tileManager) {
 			this.tileManager = tileManager;
 		}
 
@@ -23,7 +25,7 @@ namespace PaintCap
 			for (int x = 0; x < boardDimensions.x; x++) {
 				for (int y = 0; y < boardDimensions.y; y++) {
                     Tile tile = boardState[x, y].getGameTile().getTile();
-					backgroundMap.SetTile(new Vector3Int(x, y, 0), tile);
+                    tileManager.setBackgroundTile(tile, x, y);
 				}
 			}
 		}
@@ -36,20 +38,23 @@ namespace PaintCap
 
         public TileState getNearestMatch(Vector3 pos, Color color)
         {
-            float lowestColorDistance = float.MaxValue;
+            float lowestMatchValue = float.MaxValue;
             TileState bestMatch = null;
+
             foreach(var state in getNearbyTiles(pos)) {
-                Vector3 tileMiddle = state.getTileMiddle();
+                Vector2 tileMiddle = state.getTileMiddle();
                 Color tileColor = state.getGameTile().getTileColor();
-                float distanceFromTile = Vector3.Distance(tileMiddle, pos);
+                float distanceFromTile = Vector2.Distance(tileMiddle, pos);
                 float colorDistance = this.colorDistance(color, tileColor);
-                if (colorDistance < lowestColorDistance)
+                float curMatchValue = colorDistance + distanceFromTile;
+                if (curMatchValue < lowestMatchValue && curMatchValue < MAX_MATCH_THRESHOLD)
                 {
-                    lowestColorDistance = colorDistance;
+                    Debug.Log(string.Format("Candidate lowest dist [{0}] colorMatch [{1}] ", distanceFromTile, colorDistance));
+                    lowestMatchValue = curMatchValue;
                     bestMatch = state;
                 }
             }
-            Debug.Log(string.Format("best color dist {0}", lowestColorDistance));
+            Debug.Log(string.Format("Best matchValue {0}", lowestMatchValue));
             return bestMatch;
         }
 
@@ -104,13 +109,6 @@ namespace PaintCap
                 listToAdd.Add(boardState[xPos, yPos]);
             }
         }
-
-
-        //public void setTile(Vector3Int position, TileType tileType)
-        //{
-        //    TileState state = new TileState(tileManager.getTileByType(tileType));
-        //    boardState[position.x, position.y] = state;
-        //}
 
         public void initBoard(Vector2Int board) {
 			Debug.Log ("Init board jack");

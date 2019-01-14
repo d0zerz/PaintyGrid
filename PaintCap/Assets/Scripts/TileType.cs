@@ -10,6 +10,7 @@ namespace PaintCap
         BLUE_RED_TILE = 3,
         GREEN_BLUE_TILE = 4,
         RED_GREEN_TILE = 5,
+        BORDER_WHITE_TILE = 100,
     }
 }
 

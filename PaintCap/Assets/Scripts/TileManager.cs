@@ -14,8 +14,24 @@ namespace PaintCap
         public BlueRedTile blueRedTile;
         public GreenBlueTile greenBlueTile;
         public RedGreenTile redGreenTile;
+        public BorderWhite borderWhiteTile;
+
+        public AnimatedTile animatedCap;
+
+        public Tilemap backgroundMap;
+        public Tilemap capSquares;
 
         System.Random rnd = new System.Random();
+
+        public void setBackgroundTile(Tile tile, int x, int y)
+        {
+            backgroundMap.SetTile(new Vector3Int(x, y, 0), tile);
+        }
+
+        public void setCapturedTile(Tile tile, int x, int y)
+        {
+            capSquares.SetTile(new Vector3Int(x, y, 0), animatedCap);
+        }
 
         public GameTile getTileByType(TileType type) 
 		{

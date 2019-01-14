@@ -7,15 +7,16 @@ namespace PaintCap
 	public class BombManager : MonoBehaviour
 	{
 		List<ColorBomb> bombs = new List<ColorBomb>();
+        public TileManager tileManager;
 
 		public BombManager ()
 		{
 		}
 
-		public void addBomb(Vector3 position, Vector3 targetPos, Color bombColor) {
+		public void addBomb(Vector3 position, TileState targetTile, Color bombColor) {
 			GameObject newBombGameObj = new GameObject();
 			ColorBomb cb = newBombGameObj.AddComponent<ColorBomb> ();
-			cb.createBomb(position, targetPos, bombColor);
+			cb.createBomb(position, targetTile, bombColor, tileManager);
 			bombs.Add (cb);
 		}
 
@@ -29,20 +30,23 @@ namespace PaintCap
 	}
 
 	public class ColorBomb : MonoBehaviour {
-		private static float THETA_SCALE = 0.08f;        //Set lower to add more points
+        private static float BAD_TILE_ALPHA = .4f;
+        private static float BOMB_FADE_TIME_S = 1f;  // 3s
+        private static float THETA_SCALE = 0.08f;        //Set lower to add more points
 		private static float CIRCLE_RADIUS = 0.1f;
 		private static int CIRCLE_POINTS = (int)((2.0f * Mathf.PI) / THETA_SCALE); 
-		private static float TIME_ACTIVE = 3f;
-		private static float ACCEL_PER_SECOND = .3f;
+		private static float ACCEL_PER_SECOND = .5f;
 
-		public Vector3 initialPos;
-		public Vector3 endPos;
+		private Vector3 initialPos;
+		private Vector3? endPos;
 		private Color startColor;
 		private LineRenderer colorRenderer;
         private LineRenderer backgroundRenderer;
 
-		private float curSpeed = 0f;
-		private Vector2 endDirection;
+		private float curSpeed = ACCEL_PER_SECOND;
+		private Vector2? endDirection;
+        private TileState endTile;
+        private TileManager tileManager;
 
         void Awake()
         {
@@ -52,15 +56,24 @@ namespace PaintCap
             colorRenderer = colorGameObj.AddComponent<LineRenderer>();
         }
 
-        public void createBomb(Vector3 initialPos, Vector3 endPos, Color color)
+        public void createBomb(Vector3 initialPos, TileState endTile, Color color, TileManager tileManager)
 		{
 			this.initialPos = initialPos;
-			this.endPos = endPos;
-			this.startColor = color;
-            Debug.Log(string.Format("Drawing circle at {0} ", initialPos));
-            setLr(backgroundRenderer, Color.gray, 9, .25f);
-            setLr(colorRenderer, color, 10, .2f);
-			endDirection = new Vector2 (endPos.x - initialPos.x, endPos.y - initialPos.y);
+            this.endTile = endTile;
+            this.startColor = color;
+            this.tileManager = tileManager;
+
+            if (endTile != null)
+            {
+                this.endPos = endTile.getTileMiddle();
+                endDirection = new Vector2(endPos.Value.x - initialPos.x, endPos.Value.y - initialPos.y);
+            } else
+            {
+                startColor.a = BAD_TILE_ALPHA;
+            }
+
+            setLr(backgroundRenderer, new Color(90,90,90,BAD_TILE_ALPHA), 9, .25f);
+            setLr(colorRenderer, startColor, 10, .2f);
 
             colorRenderer.transform.position = initialPos;
             backgroundRenderer.transform.position = initialPos;
@@ -80,17 +93,60 @@ namespace PaintCap
             drawCircle(lr);
         }
 
-		void Update () {
-			curSpeed += ACCEL_PER_SECOND * Time.deltaTime;
-			float moveAmount = Time.deltaTime * curSpeed;
+        private void fadeBomb(LineRenderer lr, float fadePct)
+        {
+            Color curColor = lr.startColor;
+            Color newColor = new Color(curColor.r, curColor.g, curColor.b, curColor.a - fadePct);
+            lr.startColor = newColor;
+            lr.endColor = newColor;
+        }
+
+        private void fadeBombs()
+        {
+            float fadePct = Time.deltaTime / BOMB_FADE_TIME_S;
+            // fade the bomb away
+            fadeBomb(colorRenderer, fadePct);
+            fadeBomb(backgroundRenderer, fadePct);
+            if (colorRenderer.startColor.a <= 0)
+            {
+                DestroyEverything();
+            }
+        }
+
+        void Update ()
+        {
+            // bomb didn't have any matches, fade out
+            if (endTile == null)
+            {
+                fadeBombs();
+            }
+            else
+            {
+                curSpeed += ACCEL_PER_SECOND * Time.deltaTime;
+                float moveAmount = Time.deltaTime * curSpeed;
+                moveTowardsEnd(moveAmount);
+            }
+        }
+
+
+        private void moveTowardsEnd(float moveAmount)
+        {
             moveCircles(moveAmount);
 
-            if (isAtEndPoint ()) {
-                Destroy(backgroundRenderer.gameObject);
-                Destroy(colorRenderer.gameObject);
-                Destroy (gameObject);
-			}
-		}
+            if (isAtEndPoint())
+            {
+                Vector2Int coords = Vector2Int.FloorToInt(initialPos);
+                tileManager.setCapturedTile(tileManager.borderWhiteTile.tile, coords.x, coords.y);
+                DestroyEverything();
+            }
+        }
+
+        private void DestroyEverything()
+        {
+            Destroy(backgroundRenderer.gameObject);
+            Destroy(colorRenderer.gameObject);
+            Destroy(gameObject);
+        }
 
         void moveCircles(float moveAmount)
         {
@@ -101,17 +157,22 @@ namespace PaintCap
 		void moveTowardsEndPos(float moveAmount, LineRenderer lr) {
             Transform tran = lr.transform;
 			Vector3 newPos = new Vector3(
-                tran.position.x + (moveAmount * endDirection.x),
-                tran.position.y + (moveAmount * endDirection.y),
+                tran.position.x + (moveAmount * endDirection.Value.x),
+                tran.position.y + (moveAmount * endDirection.Value.y),
                 tran.position.z
 			);
 			tran.position = newPos;
 		}
 
 		private bool isAtEndPoint() {
+            if (!endPos.HasValue)
+            {
+                return true;
+            }
+
 			Vector3 curPos = colorRenderer.transform.position;
-			return isDimensionDone (endDirection.x, curPos.x, endPos.x) &&
-				   isDimensionDone (endDirection.y, curPos.y, endPos.y);
+			return isDimensionDone (endDirection.Value.x, curPos.x, endPos.Value.x) &&
+				   isDimensionDone (endDirection.Value.y, curPos.y, endPos.Value.y);
 			
 		}
 

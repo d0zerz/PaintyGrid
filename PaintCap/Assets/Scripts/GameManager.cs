@@ -27,7 +27,7 @@ namespace PaintCap
 			if (instance == null) {
 				//if not, set instance to this
 				instance = this;
-				boardState = new BoardState (backgroundTilemap, tileManager);
+				boardState = new BoardState (tileManager);
 			}
 
 	        //If instance already exists and it's not this:
@@ -65,7 +65,7 @@ namespace PaintCap
                 TileState tileState = boardState.getTileState(pointClicked);
                 Color color = tileState.getGameTile().getTileColor();
                 TileState bestTileMatch = boardState.getNearestMatch(pointClicked, acm.getCurColor());
-                bombManager.addBomb(pointClicked, bestTileMatch.getTileMiddle(), acm.getCurColor());
+                bombManager.addBomb(pointClicked, bestTileMatch, acm.getCurColor());
                 Debug.Log(string.Format("Co-ords of mouse is [X: {0} Y: {1}] {2}", pointClicked.x, pointClicked.y, color.ToString()));
             }
         }

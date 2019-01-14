@@ -10,6 +10,7 @@ namespace PaintCap
 		private GameTile backgroundTile;
         private Vector2 tilePos;
 
+
 		public TileState (GameTile backgroundTile, int x, int y)
 		{
 			this.backgroundTile = backgroundTile;
