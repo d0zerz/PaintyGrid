@@ -12,7 +12,7 @@ sysinfo.txt
 /Assets/AssetStoreTools*
 *.apk
 *.unitypackage
- 
+/paintycap_Data/ 
 # ===================================== #
 # Visual Studio / MonoDevelop generated #
 # ===================================== #
