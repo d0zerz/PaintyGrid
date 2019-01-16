@@ -56,6 +56,21 @@ namespace PaintCap
             colorRenderer = colorGameObj.AddComponent<LineRenderer>();
         }
 
+        void Update()
+        {
+            // bomb didn't have any matches, fade out
+            if (endTile == null)
+            {
+                fadeBombs();
+            }
+            else
+            {
+                curSpeed += ACCEL_PER_SECOND * Time.deltaTime;
+                float moveAmount = Time.deltaTime * curSpeed;
+                moveTowardsEnd(moveAmount);
+            }
+        }
+
         public void createBomb(Vector3 initialPos, TileState endTile, Color color, TileManager tileManager)
 		{
 			this.initialPos = initialPos;
@@ -113,29 +128,13 @@ namespace PaintCap
             }
         }
 
-        void Update ()
-        {
-            // bomb didn't have any matches, fade out
-            if (endTile == null)
-            {
-                fadeBombs();
-            }
-            else
-            {
-                curSpeed += ACCEL_PER_SECOND * Time.deltaTime;
-                float moveAmount = Time.deltaTime * curSpeed;
-                moveTowardsEnd(moveAmount);
-            }
-        }
-
-
         private void moveTowardsEnd(float moveAmount)
         {
             moveCircles(moveAmount);
 
             if (isAtEndPoint())
             {
-                Vector2Int coords = Vector2Int.FloorToInt(initialPos);
+                Vector2Int coords = Vector2Int.FloorToInt(endTile.getTilePosition());
                 tileManager.setCapturedTile(tileManager.borderWhiteTile.tile, coords.x, coords.y);
                 DestroyEverything();
             }

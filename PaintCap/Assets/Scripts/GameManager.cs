@@ -12,12 +12,13 @@ namespace PaintCap
 
 		public Tilemap backgroundTilemap;
 		public TileManager tileManager;
-		public Transform mainCam;
 		public ActiveColorManager acm;
 		public BombManager bombManager;
+        public ScreenChange screenChange;
+        public Camera mainCam;
+        public Camera uiCam;
 
         private BoardState boardState;
-
 		private int gameCounter;
 
 	    //Awake is always called before any Start functions
@@ -46,12 +47,28 @@ namespace PaintCap
 	        Debug.Log("init game");
 			boardState.initBoard(new Vector2Int(20,20));
 			boardState.paintBoardState ();
-			//camera.position = new Vector3(10, 10, -10);
-	    }
+            //camera.position = new Vector3(10, 10, -10);
+            screenChange.OnOrientationChange.AddListener(ResolutionChange);
+            screenChange.OnResolutionChange.AddListener(ResolutionChange);
+        }
+
+        void ResolutionChange()
+        {
+            Rect uiRect = uiCam.rect;
+            Vector2 mainWorldMin = uiCam.ViewportToWorldPoint(new Vector3(uiRect.xMin, uiRect.yMin));
+            Vector2 mainWorldMax = uiCam.ViewportToWorldPoint(new Vector3(uiRect.xMax, uiRect.yMax));
+
+            Rect mainCamRect = mainCam.rect;
+            Vector2 resolution = new Vector2(Screen.width, Screen.height);
+            DeviceOrientation orientation = Input.deviceOrientation;
+            Debug.Log(string.Format("Resolution change [{0},{1}] : {2}",resolution.x, resolution.y, orientation));
+            Debug.Log(string.Format("UI Rect{0} {1} {2} {3}  |||  mainCamRec{4} {5} {6} {7}", mainWorldMin.x, mainWorldMin.y, mainWorldMax.x, mainWorldMax.y, 
+                mainCamRect.xMin, mainCamRect.xMax, mainCamRect.yMin, mainCamRect.yMax));
+        }
 
         //Update is called every frame.
         void Update()
-	    {
+        {
             gameCounter++;
             if (gameCounter % 100 == 0)
             {
@@ -67,6 +84,10 @@ namespace PaintCap
                 TileState bestTileMatch = boardState.getNearestMatch(pointClicked, acm.getCurColor());
                 bombManager.addBomb(pointClicked, bestTileMatch, acm.getCurColor());
                 Debug.Log(string.Format("Co-ords of mouse is [X: {0} Y: {1}] {2}", pointClicked.x, pointClicked.y, color.ToString()));
+            }
+            if (Input.GetMouseButtonDown(1))
+            {
+
             }
         }
 	}
