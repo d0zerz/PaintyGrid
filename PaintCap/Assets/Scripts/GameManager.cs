@@ -20,6 +20,7 @@ namespace PaintCap
 
         private BoardState boardState;
 		private int gameCounter;
+		private Vector3? lastMousePos = null;
 
 	    //Awake is always called before any Start functions
 	    void Awake()
@@ -75,8 +76,21 @@ namespace PaintCap
                 //DrawTopColors();
                 //Debug.Log(string.Format("gameCounter {0}", gameCounter));
             }
-
-            if (Input.GetMouseButtonDown(0))
+			if (!Input.GetKey("left ctrl")) {
+				lastMousePos = null;
+			}
+			if (Input.GetKey("left ctrl") ) //&& Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+			{
+				if (lastMousePos.HasValue) {
+					Vector2 posDiff = mainCam.ScreenToWorldPoint(lastMousePos.Value) - mainCam.ScreenToWorldPoint(Input.mousePosition);
+					Vector3 curPos = mainCam.transform.position; // mainCam.ScreenToWorldPoint(posDiff) // .transform.position;
+					mainCam.transform.position = new Vector3 (curPos.x + posDiff.x, curPos.y + posDiff.y, curPos.z);
+					Debug.Log(string.Format("PosDiff {0} ", posDiff));
+				}
+				//Debug.Log(string.Format("Co-ords of right click is [X: {0} Y: {1}]", pointClicked.x, pointClicked.y));
+				lastMousePos = Input.mousePosition;
+			}
+            else if (Input.GetMouseButtonDown(0))
             {
                 Vector3 pointClicked = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 TileState tileState = boardState.getTileState(pointClicked);
@@ -85,10 +99,7 @@ namespace PaintCap
                 bombManager.addBomb(pointClicked, bestTileMatch, acm.getCurColor());
                 Debug.Log(string.Format("Co-ords of mouse is [X: {0} Y: {1}] {2}", pointClicked.x, pointClicked.y, color.ToString()));
             }
-            if (Input.GetMouseButtonDown(1))
-            {
 
-            }
         }
 	}
 }

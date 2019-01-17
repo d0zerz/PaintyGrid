@@ -5,9 +5,9 @@ namespace PaintCap
 {
 	public class ActiveColorManager : MonoBehaviour
 	{
-		public LineRenderer colorLine;
 		public LineRenderer solidColorLine;
         public Transform colorLinesTransform;
+		public Camera uiCamera;
 
 		private float timer = 0.0f;
 		private float curTimeInCycle = 0.0f;
@@ -48,6 +48,12 @@ namespace PaintCap
 			float cyclePct = getCyclePct ();
 			moveColorLineToPct (cyclePct);
 			changeSolidColor (cyclePct);
+		}
+
+		public void handleResChange() {
+			Vector2 camTopLeft = uiCamera.ScreenToWorldPoint(new Vector2 (uiCamera.rect.xMin, uiCamera.rect.yMin));
+			Vector2 solidLinePos = solidColorLine.transform.position;
+
 		}
 
 		public Color getCurColor() {
