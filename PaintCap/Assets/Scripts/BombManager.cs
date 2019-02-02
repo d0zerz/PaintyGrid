@@ -1,31 +1,59 @@
 ﻿using System.Collections.Generic;
 using System;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace PaintCap
 {
 	public class BombManager : MonoBehaviour
 	{
+        private static int INITIAL_NUM_BOMBS = 4;
+        private static float BOMB_RECHARGE_TIME = 2f;
+
 		List<ColorBomb> bombs = new List<ColorBomb>();
         public TileManager tileManager;
+        public Text bombText;
+        private int curBombs = INITIAL_NUM_BOMBS;
+        private int maxBombs = INITIAL_NUM_BOMBS;
+        private float bombRechargeTimer = 0f;
 
 		public BombManager ()
 		{
 		}
 
-		public void addBomb(Vector3 position, TileState targetTile, Color bombColor) {
+		public void addBomb(Vector3 position, TileCapture tileCapture, Color bombColor) {
+            if (curBombs <= 0)
+            {
+                return;
+            }
+
 			GameObject newBombGameObj = new GameObject();
 			ColorBomb cb = newBombGameObj.AddComponent<ColorBomb> ();
-			cb.createBomb(position, targetTile, bombColor, tileManager);
+			cb.createBomb(position, tileCapture, bombColor, tileManager);
 			bombs.Add (cb);
+            curBombs--;
+            updateText();
 		}
+
+        void updateText()
+        {
+            bombText.text = string.Format("{0}/{1} Bombs", curBombs, maxBombs);
+        }
 
 		void Awake () {       
 
 		}
 
 		void Update () {
-			
+            bombRechargeTimer += Time.deltaTime;
+            if (bombRechargeTimer > BOMB_RECHARGE_TIME)
+            {
+                if (curBombs < maxBombs) {
+                    curBombs++;
+                    updateText();
+                }
+                bombRechargeTimer -= BOMB_RECHARGE_TIME;
+            }
 		}
 	}
 
@@ -47,6 +75,7 @@ namespace PaintCap
 		private Vector2? endDirection;
         private TileState endTile;
         private TileManager tileManager;
+        private float bombDamage;
 
         void Awake()
         {
@@ -71,11 +100,12 @@ namespace PaintCap
             }
         }
 
-        public void createBomb(Vector3 initialPos, TileState endTile, Color color, TileManager tileManager)
+        public void createBomb(Vector3 initialPos, TileCapture tileCapture, Color color, TileManager tileManager)
 		{
 			this.initialPos = initialPos;
-            this.endTile = endTile;
+            this.endTile = tileCapture.tileState;
             this.startColor = color;
+            this.bombDamage = tileCapture.capAmount;
             this.tileManager = tileManager;
 
             if (endTile != null)
@@ -135,7 +165,8 @@ namespace PaintCap
             if (isAtEndPoint())
             {
                 Vector2Int coords = Vector2Int.FloorToInt(endTile.getTilePosition());
-                tileManager.setCapturedTile(tileManager.borderWhiteTile.tile, coords.x, coords.y);
+                endTile.addCaptureAmount(bombDamage);
+                tileManager.drawTileCapture(endTile);
                 DestroyEverything();
             }
         }

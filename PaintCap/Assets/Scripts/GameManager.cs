@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Tilemaps;
 using System.Collections;
-
 using System.Collections.Generic;       //Allows us to use Lists. 
 
 namespace PaintCap
@@ -46,9 +45,8 @@ namespace PaintCap
 	    void InitGame()
 	    {
 	        Debug.Log("init game");
-			boardState.initBoard(new Vector2Int(20,20));
+			boardState.initBoard();
 			boardState.paintBoardState ();
-            //camera.position = new Vector3(10, 10, -10);
             screenChange.OnOrientationChange.AddListener(ResolutionChange);
             screenChange.OnResolutionChange.AddListener(ResolutionChange);
         }
@@ -76,30 +74,60 @@ namespace PaintCap
                 //DrawTopColors();
                 //Debug.Log(string.Format("gameCounter {0}", gameCounter));
             }
-			if (!Input.GetKey("left ctrl")) {
+			if (!Input.GetKey("left ctrl") && !Input.GetMouseButton(1)) {
 				lastMousePos = null;
 			}
-			if (Input.GetKey("left ctrl") ) //&& Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))
+			if (Input.GetKey("left ctrl") || Input.GetMouseButton(1))
 			{
-				if (lastMousePos.HasValue) {
-					Vector2 posDiff = mainCam.ScreenToWorldPoint(lastMousePos.Value) - mainCam.ScreenToWorldPoint(Input.mousePosition);
-					Vector3 curPos = mainCam.transform.position; // mainCam.ScreenToWorldPoint(posDiff) // .transform.position;
-					mainCam.transform.position = new Vector3 (curPos.x + posDiff.x, curPos.y + posDiff.y, curPos.z);
-					Debug.Log(string.Format("PosDiff {0} ", posDiff));
-				}
-				//Debug.Log(string.Format("Co-ords of right click is [X: {0} Y: {1}]", pointClicked.x, pointClicked.y));
-				lastMousePos = Input.mousePosition;
+				if (lastMousePos.HasValue)
+                {
+                    Vector2 posDiff = mainCam.ScreenToWorldPoint(lastMousePos.Value) - mainCam.ScreenToWorldPoint(Input.mousePosition);
+                    moveMainCam(posDiff);
+                    Debug.Log(string.Format("PosDiff {0} ", posDiff));
+                }
+                //Debug.Log(string.Format("Co-ords of right click is [X: {0} Y: {1}]", pointClicked.x, pointClicked.y));
+                lastMousePos = Input.mousePosition;
 			}
             else if (Input.GetMouseButtonDown(0))
             {
                 Vector3 pointClicked = Camera.main.ScreenToWorldPoint(Input.mousePosition);
                 TileState tileState = boardState.getTileState(pointClicked);
-                Color color = tileState.getGameTile().getTileColor();
-                TileState bestTileMatch = boardState.getNearestMatch(pointClicked, acm.getCurColor());
-                bombManager.addBomb(pointClicked, bestTileMatch, acm.getCurColor());
-                Debug.Log(string.Format("Co-ords of mouse is [X: {0} Y: {1}] {2}", pointClicked.x, pointClicked.y, color.ToString()));
+                if (tileState != null)
+                {
+                    Color color = tileState.getGameTile().getTileColor();
+                    TileCapture bestTileMatch = boardState.processBombDrop(pointClicked, acm.getCurColor());
+                    bombManager.addBomb(pointClicked, bestTileMatch, acm.getCurColor());
+                    Debug.Log(string.Format("Co-ords of mouse is [X: {0} Y: {1}] {2}", pointClicked.x, pointClicked.y, color.ToString()));
+                }
             }
-
         }
-	}
+
+        private const float OUT_OF_BOUNDS_VISUAL_GIVE = .1f;
+        private void moveMainCam(Vector2 posDiff)
+        {
+            Rect mainCamRect = mainCam.rect;
+            Vector2 mainWorldMin = mainCam.ViewportToWorldPoint(new Vector3(mainCamRect.xMin, mainCamRect.yMin));
+            Vector2 mainWorldMax = mainCam.ViewportToWorldPoint(new Vector3(mainCamRect.xMax, mainCamRect.yMax));
+
+            Vector3 curPos = mainCam.transform.position; // mainCam.ScreenToWorldPoint(posDiff) // .transform.position;
+            Debug.Log(string.Format("xMin{0} yMin{1} xMax{2} yMax{3}", mainWorldMin.x, mainWorldMin.y, mainWorldMax.x, mainWorldMax.y));
+            if (mainWorldMin.x < -1f * OUT_OF_BOUNDS_VISUAL_GIVE && posDiff.x < 0)
+            {
+                posDiff.x = 0;
+            }
+            if (mainWorldMin.y < -1f * OUT_OF_BOUNDS_VISUAL_GIVE && posDiff.y < 0)
+            {
+                posDiff.y = 0;
+            }
+            if (mainWorldMax.x > boardState.getBoardDimensions().x + OUT_OF_BOUNDS_VISUAL_GIVE && posDiff.x > 0)
+            {
+                posDiff.x = 0;
+            }
+            if (mainWorldMax.y > boardState.getBoardDimensions().y + OUT_OF_BOUNDS_VISUAL_GIVE + .5f && posDiff.y > 0)
+            {
+                posDiff.y = 0;
+            }
+            mainCam.transform.position = new Vector3(curPos.x + posDiff.x, curPos.y + posDiff.y, curPos.z);
+        }
+    }
 }
