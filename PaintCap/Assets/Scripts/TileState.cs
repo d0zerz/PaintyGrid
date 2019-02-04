@@ -8,6 +8,7 @@ namespace PaintCap
 	public class TileState
 	{
         private const float TOTAL_CAP_REQUIRED = 2f;
+        private const float TOTAL_CAP_REQUIRED_FINAL_TILE = 10f;
 		private GameTile backgroundTile;
         private Vector2Int tilePos;
         public Tile modifierTile;
@@ -39,7 +40,7 @@ namespace PaintCap
         {
             if (isFinalTile)
             {
-                return TOTAL_CAP_REQUIRED * 10;
+                return TOTAL_CAP_REQUIRED_FINAL_TILE;
             }
             return TOTAL_CAP_REQUIRED;
         }

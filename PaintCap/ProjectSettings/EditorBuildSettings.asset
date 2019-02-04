@@ -4,4 +4,10 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/lvlSelect.unity
+    guid: b792ccca209a3a64bb342ea3729b30a0
+  - enabled: 1
+    path: Assets/Scenes/gridscene.unity
+    guid: 9f93ea7652a7ae44d8f63729042c6757

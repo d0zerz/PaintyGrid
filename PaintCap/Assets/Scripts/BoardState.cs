@@ -47,7 +47,7 @@ namespace PaintCap
             {
                 return boardState[boardStatePos.x, boardStatePos.y];
             }
-            catch(Exception e)
+            catch(Exception)
             {
                 return null;
             }
@@ -68,6 +68,7 @@ namespace PaintCap
                 Color tileColor = state.getGameTile().getTileColor();
                 float distanceFromTile = Vector2.Distance(tileMiddle, pos);
                 float colorDistance = this.colorDistance(color, tileColor);
+                //TODO: make this better
                 float curDamageValue = ((1f - colorDistance) + Mathf.Max(0f, (1f - distanceFromTile))) / 2f;
 
                 if (curDamageValue > highestDamageValue && curDamageValue > MIN_DAMAGE_THRESHOLD)
@@ -146,24 +147,57 @@ namespace PaintCap
         }
 
         public void initBoard() {
-			initLineBoardRandomly(16, 10);
-            initCapPoints();
-            initModifiers();
+            switch(LevelSelector.currentLevel)
+            {
+                case 1:
+                    initLevel1();
+                    break;
+                case 2:
+                    initLevel2();
+                    break;
+                default:
+                    break;
+            }
 		}
 
-        public void initModifiers()
+        public void initLevel1()
         {
-            TileState state = boardState[9, 2];
+            initLineBoardRandomly(6, 10);
+            List<Vector2Int> capPoints = new List<Vector2Int>
+            {
+                new Vector2Int(0,0),
+                new Vector2Int(1,0),
+                new Vector2Int(0,1),
+                new Vector2Int(1,1)
+            };
+            initCapPoints(capPoints);
+            initModifiers(new Vector2Int(5,9));
+        }
+
+        public void initLevel2()
+        {
+            initLineBoardRandomly(6, 10);
+            List<Vector2Int> capPoints = new List<Vector2Int>
+            {
+                new Vector2Int(0,0)
+            };
+            initCapPoints(capPoints);
+            initModifiers(new Vector2Int(3, 7));
+        }
+
+        public void initModifiers(Vector2Int winningPos)
+        {
+            TileState state = boardState[winningPos.x , winningPos.y];
             state.isFinalTile = true;
             state.modifierTile = tileManager.levelWinningTile;
         }
 
-        public void initCapPoints()
+        public void initCapPoints(List<Vector2Int> capPositions)
         {
-            setCapPos(0, 0);
-            setCapPos(1, 0);
-            setCapPos(0, 1);
-            setCapPos(1, 1);
+            foreach (var capPos in capPositions)
+            {
+                setCapPos(capPos.x, capPos.y);
+            }
         }
 
         public void setCapPos(int x, int y)

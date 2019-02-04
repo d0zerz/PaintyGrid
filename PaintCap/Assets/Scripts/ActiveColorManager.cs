@@ -12,7 +12,7 @@ namespace PaintCap
 		private float timer = 0.0f;
 		private float curTimeInCycle = 0.0f;
 		private const float WAIT_TIME = 0.01f;
-		private const float CYCLE_TIME = 20f; 
+		private const float CYCLE_TIME = 12f; 
 
 		//TODO: make dyamic from colorLine's initial length
 		private const float LINE_LENGTH = 10f; 
