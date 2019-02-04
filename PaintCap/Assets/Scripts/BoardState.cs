@@ -15,6 +15,9 @@ namespace PaintCap
         private TileManager tileManager;
 		private TileState[,] boardState;
 
+        private Vector2Int endPosition;
+        private List<Vector2Int> capturedPositions = new List<Vector2Int>();
+
 		public BoardState(TileManager tileManager) {
 			this.tileManager = tileManager;
 		}
@@ -185,11 +188,22 @@ namespace PaintCap
             initModifiers(new Vector2Int(3, 7));
         }
 
+        public Vector2Int getEndpos()
+        {
+            return endPosition;
+        }
+
         public void initModifiers(Vector2Int winningPos)
         {
             TileState state = boardState[winningPos.x , winningPos.y];
             state.isFinalTile = true;
             state.modifierTile = tileManager.levelWinningTile;
+            endPosition = winningPos;
+        }
+
+        public List<Vector2Int> getCapturedPositions()
+        {
+            return capturedPositions;
         }
 
         public void initCapPoints(List<Vector2Int> capPositions)
@@ -205,6 +219,7 @@ namespace PaintCap
             TileState state = boardState[x, y];
             state.captureFully();
             tileManager.drawTileCapture(state);
+            capturedPositions.Add(new Vector2Int(x, y));
         }
 
         private void initLineBoardRandomly(int width, int height)

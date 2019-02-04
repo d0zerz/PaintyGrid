@@ -5,6 +5,7 @@ using System.Collections.Generic;       //Allows us to use Lists.
 
 namespace PaintCap
 {
+    // TODO: this class is bloated A.F.
 	public class GameManager : MonoBehaviour
 	{
 	    public static GameManager instance = null;  //Static instance of GameManager which allows it to be accessed by any other script.
@@ -20,6 +21,19 @@ namespace PaintCap
         private BoardState boardState;
 		private int gameCounter;
 		private Vector3? lastMousePos = null;
+
+        // TODO: refactor level loading stuff into own class
+        private bool initializingLevel = false;
+        private Vector3 targetLevelLoadPosStart;
+        private Vector3 targetLevelLoadPosEnd;
+        private float timeThroughInit = 0f;
+        private const float INIT_ANIMATION_TIME = 4f;
+        private const float INIT_PAUSE_TIME = 2f;
+        private const float INIT_TOTAL_TIME = INIT_PAUSE_TIME + INIT_ANIMATION_TIME;
+
+        private const float INIT_SMOOTH_SPEED = .2f;
+
+
 
 	    //Awake is always called before any Start functions
 	    void Awake()
@@ -49,6 +63,28 @@ namespace PaintCap
 			boardState.paintBoardState ();
             screenChange.OnOrientationChange.AddListener(ResolutionChange);
             screenChange.OnResolutionChange.AddListener(ResolutionChange);
+            initializeLevel();
+            
+        }
+
+        void initializeLevel()
+        {
+            //start camera at endpos
+            Vector2Int endPos = boardState.getEndpos();
+            mainCam.transform.position = new Vector3(endPos.x, endPos.y, mainCam.transform.position.z);
+
+            Vector2 aggregateCapPos = new Vector2();
+            foreach (var position in boardState.getCapturedPositions())
+            {
+                aggregateCapPos += position;
+            }
+            aggregateCapPos = aggregateCapPos / boardState.getCapturedPositions().Count;
+
+            // move camera to endpos
+            targetLevelLoadPosEnd = new Vector3(1, 1, mainCam.transform.position.z);
+            targetLevelLoadPosStart = mainCam.transform.position;
+            initializingLevel = true;
+            
         }
 
         void ResolutionChange()
@@ -68,6 +104,21 @@ namespace PaintCap
         //Update is called every frame.
         void Update()
         {
+            if (initializingLevel)
+            {
+                //move camera to bottom left over a few seconds
+                
+                timeThroughInit += Time.deltaTime;
+                if (timeThroughInit > INIT_TOTAL_TIME)
+                {
+                    initializingLevel = false;
+                }
+                else {
+                    float pctThroughAnimation = timeThroughInit < INIT_PAUSE_TIME ? 0 : (timeThroughInit - INIT_PAUSE_TIME) / INIT_ANIMATION_TIME;
+                    Vector3 smoothedPos = Vector3.Lerp(targetLevelLoadPosStart, targetLevelLoadPosEnd, pctThroughAnimation);
+                    mainCam.transform.position = smoothedPos;
+                }
+            }
             gameCounter++;
             if (gameCounter % 100 == 0)
             {
