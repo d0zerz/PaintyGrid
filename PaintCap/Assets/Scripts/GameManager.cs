@@ -27,13 +27,10 @@ namespace PaintCap
         private Vector3 targetLevelLoadPosStart;
         private Vector3 targetLevelLoadPosEnd;
         private float timeThroughInit = 0f;
-        private const float INIT_ANIMATION_TIME = 4f;
-        private const float INIT_PAUSE_TIME = 2f;
+        private const float INIT_ANIMATION_TIME = 3f;
+        private const float INIT_PAUSE_TIME = 1f;
         private const float INIT_TOTAL_TIME = INIT_PAUSE_TIME + INIT_ANIMATION_TIME;
-
         private const float INIT_SMOOTH_SPEED = .2f;
-
-
 
 	    //Awake is always called before any Start functions
 	    void Awake()
@@ -80,8 +77,21 @@ namespace PaintCap
             }
             aggregateCapPos = aggregateCapPos / boardState.getCapturedPositions().Count;
 
+			Vector3 camMin = mainCam.ViewportToWorldPoint(new Vector3( mainCam.rect.xMin, mainCam.rect.yMin));
+			Vector3 camMax = mainCam.ViewportToWorldPoint(new Vector3( mainCam.rect.xMax, mainCam.rect.yMax));
+
+			// Target the camera to move so that bottom left is at 0,0
+			Vector3 targetPos = new Vector3 (mainCam.transform.position.x, mainCam.transform.position.y, mainCam.transform.position.z);
+			if (camMin.x > 0) {
+				targetPos -= new Vector3 (camMin.x, 0, 0);
+			}
+			if (camMin.y > 0) {
+				targetPos -= new Vector3 (0, camMin.y, 0);
+			}
+
+			Debug.Log(string.Format("camMin [{0}] camMax [{1}] ", camMin, camMax));
             // move camera to endpos
-            targetLevelLoadPosEnd = new Vector3(1, 1, mainCam.transform.position.z);
+			targetLevelLoadPosEnd = targetPos; // new Vector3(aggregateCapPos.x, aggregateCapPos.y, mainCam.transform.position.z);
             targetLevelLoadPosStart = mainCam.transform.position;
             initializingLevel = true;
             
