@@ -15,8 +15,8 @@ namespace PaintCap
         private TileManager tileManager;
 		private TileState[,] boardState;
 
-        private Vector2Int endPosition;
         private List<Vector2Int> capturedPositions = new List<Vector2Int>();
+        private List<TileState> endPositions = new List<TileState>();
 
 		public BoardState(TileManager tileManager) {
 			this.tileManager = tileManager;
@@ -28,11 +28,14 @@ namespace PaintCap
 			for (int x = 0; x < boardDimensions.x; x++) {
 				for (int y = 0; y < boardDimensions.y; y++) {
                     TileState tileState = boardState[x, y];
-                    Tile tile = tileState.getGameTile().getTile();
-                    tileManager.setBackgroundTile(tile, x, y);
-                    if (tileState.modifierTile != null)
+                    if (tileState != null)
                     {
-                        tileManager.setModifierTile(tileState.modifierTile, x, y);
+                        Tile tile = tileState.getGameTile().getTile();
+                        tileManager.setBackgroundTile(tile, x, y);
+                        if (tileState.modifierTile != null)
+                        {
+                            tileManager.setModifierTile(tileState.modifierTile, x, y);
+                        }
                     }
 				}
 			}
@@ -61,28 +64,84 @@ namespace PaintCap
             float highestDamageValue = 0;
             TileState bestMatch = null;
 
-            foreach(var state in getNearbyTiles(pos)) {
+            int numCandidates = 0;
+            List<TileState> nearbyTiles = getNearbyTiles(pos);
+            foreach (var state in nearbyTiles)
+            {
                 // if state is capped, or there's no captured tile adjacent
-                if (state.isCapped() || !hasCapAdjacent(state.getTilePosition()))
+                bool hasCapAdj = hasCapAdjacent(state.getTilePosition());
+                if (state.isCapped() || !hasCapAdj)
                 {
                     continue;
                 }
+                numCandidates++;
                 Vector2 tileMiddle = state.getTileMiddle();
                 Color tileColor = state.getGameTile().getTileColor();
-                float distanceFromTile = Vector2.Distance(tileMiddle, pos);
-                float colorDistance = this.colorDistance(color, tileColor);
-                //TODO: make this better
-                float curDamageValue = ((1f - colorDistance) + Mathf.Max(0f, (1f - distanceFromTile))) / 2f;
+                float distanceScore = getDistanceScore(pos, tileMiddle);
+                float colorScore = getColorScore(color, tileColor);
 
+
+                //TODO: make this better
+                float curDamageValue = (distanceScore + colorScore) / 2f;
+
+                Debug.Log(string.Format("Candidate lowest dist [{0}] colorMatch [{1}] ", distanceScore, colorScore));
                 if (curDamageValue > highestDamageValue && curDamageValue > MIN_DAMAGE_THRESHOLD)
                 {
-                    Debug.Log(string.Format("Candidate lowest dist [{0}] colorMatch [{1}] ", distanceFromTile, colorDistance));
                     highestDamageValue = curDamageValue;
                     bestMatch = state;
                 }
             }
-            Debug.Log(string.Format("Best dmg val {0}", highestDamageValue));
+            //Debug.Log(string.Format("Best dmg val {0}, NumCandidates {1}/{2}", highestDamageValue, numCandidates, nearbyTiles.Count));
             return new TileCapture(bestMatch, highestDamageValue);
+        }
+
+        private static float getDistanceScore(Vector3 pos, Vector2 tileMiddle)
+        {
+            float distance = Vector2.Distance(tileMiddle, pos);
+            if (distance > 1f)
+            {
+                return 0;
+            }
+            else if (distance > .75f)
+            {
+                return .2f;
+            }
+            else if (distance > .5f)
+            {
+                return .4f;
+            }
+            else if (distance > .2f)
+            {
+                return .7f;
+            }
+            else if (distance > .1f)
+            {
+                return .85f;
+            }
+            return 1;
+        }
+
+        private float getColorScore(Color bombColor, Color tileColor)
+        {
+            float colorDistance = this.colorDistance(bombColor, tileColor);
+            if (colorDistance < .2f)
+            {
+                return 1;
+            }
+            else if (colorDistance < .5f)
+            {
+                return .75f;
+            }
+            else if (colorDistance < .8f)
+            {
+                return .50f;
+            }
+            else if (colorDistance < 1f)
+            {
+                return .3f;
+            }
+            return 0;
+
         }
 
         private bool hasCapAdjacent(Vector2Int pos)
@@ -132,12 +191,14 @@ namespace PaintCap
             addTileStateSafe(tileStates, xPos, yPos);
             addTileStateSafe(tileStates, xPos, yPos - 1);
             addTileStateSafe(tileStates, xPos, yPos + 1);
+
             addTileStateSafe(tileStates, xPos - 1, yPos + 1);
             addTileStateSafe(tileStates, xPos - 1, yPos);
             addTileStateSafe(tileStates, xPos - 1, yPos - 1);
+
             addTileStateSafe(tileStates, xPos + 1, yPos + 1);
             addTileStateSafe(tileStates, xPos + 1, yPos);
-            addTileStateSafe(tileStates, xPos + 1, yPos + 1);
+            addTileStateSafe(tileStates, xPos + 1, yPos - 1);
             return tileStates;
         }
 
@@ -145,11 +206,16 @@ namespace PaintCap
         {
             if (xPos >=0 && xPos < boardDimensions.x && yPos >= 0 && yPos < boardDimensions.y)
             {
-                listToAdd.Add(boardState[xPos, yPos]);
+                TileState tileState = boardState[xPos, yPos];
+                if (tileState != null)
+                {
+                    listToAdd.Add(tileState);
+                }
             }
         }
 
         public void initBoard() {
+            //TODO: Factory pattern this
             switch(LevelSelector.currentLevel)
             {
                 case 1:
@@ -179,18 +245,19 @@ namespace PaintCap
 
         public void initLevel2()
         {
-            initLineBoardRandomly(6, 10);
+            boardDimensions = new Vector2Int(2, 18);
+            initBoardRectangle(new Vector2Int(2, 0), new Vector2Int(4, 18));
             List<Vector2Int> capPoints = new List<Vector2Int>
             {
-                new Vector2Int(0,0)
+                new Vector2Int(2,0)
             };
             initCapPoints(capPoints);
-            initModifiers(new Vector2Int(3, 7));
+            initModifiers(new Vector2Int(2, 17));
         }
 
         public Vector2Int getEndpos()
         {
-            return endPosition;
+            return endPositions[0].getTilePosition();
         }
 
         public void initModifiers(Vector2Int winningPos)
@@ -198,7 +265,19 @@ namespace PaintCap
             TileState state = boardState[winningPos.x , winningPos.y];
             state.isFinalTile = true;
             state.modifierTile = tileManager.levelWinningTile;
-            endPosition = winningPos;
+            endPositions.Add(state);
+        }
+
+        public bool isLevelClear()
+        {
+            foreach(var endPos in endPositions)
+            {
+                if (!endPos.isCapped())
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public List<Vector2Int> getCapturedPositions()
@@ -236,20 +315,31 @@ namespace PaintCap
             }
         }
 
-        private void initSquareBoardRandomly(int size) {
-            Debug.Log("Init square board randomly jack " + size);
-            boardDimensions = new Vector2Int(size, size);
-            boardState = new TileState[boardDimensions.x, boardDimensions.y];
-			for (int x = 0; x < boardDimensions.x; x++) {
-				for (int y = 0; y < boardDimensions.y; y++) {
-					boardState [x, y] = new TileState(tileManager.getRandomTile(), x, y);
-				}
-			}
-		}
-
-        private void initBoardDiagonal()
+        private void initBoardRectangle(Vector2Int botLeft, Vector2Int topRight)
         {
-
+            boardDimensions = new Vector2Int(topRight.x, topRight.y);
+            boardState = new TileState[boardDimensions.x, boardDimensions.y];
+            for (int x = botLeft.x; x < topRight.x; x++)
+            {
+                for (int y = botLeft.y; y < topRight.y; y++)
+                {
+                    boardState[x, y] = new TileState(tileManager.getRandomTile(), x, y);
+                }
+            }
         }
+            private void initSquareBoardRandomly(int size)
+            {
+                Debug.Log("Init square board randomly jack " + size);
+                boardDimensions = new Vector2Int(size, size);
+                boardState = new TileState[boardDimensions.x, boardDimensions.y];
+                for (int x = 0; x < boardDimensions.x; x++)
+                {
+                    for (int y = 0; y < boardDimensions.y; y++)
+                    {
+                        boardState[x, y] = new TileState(tileManager.getRandomTile(), x, y);
+                    }
+                }
+
+            }
 	}
 }

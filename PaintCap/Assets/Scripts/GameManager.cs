@@ -17,36 +17,31 @@ namespace PaintCap
         public ScreenChange screenChange;
         public Camera mainCam;
         public Camera uiCam;
+        public LevelInit levelInit;
+        public LevelSelector levelSelector;
 
         private BoardState boardState;
 		private int gameCounter;
 		private Vector3? lastMousePos = null;
 
-        // TODO: refactor level loading stuff into own class
-        private bool initializingLevel = false;
-        private Vector3 targetLevelLoadPosStart;
-        private Vector3 targetLevelLoadPosEnd;
-        private float timeThroughInit = 0f;
-        private const float INIT_ANIMATION_TIME = 3f;
-        private const float INIT_PAUSE_TIME = 1f;
-        private const float INIT_TOTAL_TIME = INIT_PAUSE_TIME + INIT_ANIMATION_TIME;
-        private const float INIT_SMOOTH_SPEED = .2f;
-
 	    //Awake is always called before any Start functions
 	    void Awake()
 	    {
-	        //Check if instance already exists
-			if (instance == null) {
-				//if not, set instance to this
-				instance = this;
-				boardState = new BoardState (tileManager);
-			}
+            //Check if instance already exists
+            if (instance == null)
+            {
+                //if not, set instance to this
+                instance = this;
+                boardState = new BoardState(tileManager);
+            }
 
-	        //If instance already exists and it's not this:
-	        else if (instance != this)
+            //If instance already exists and it's not this:
+            else if (instance != this)
+            {
 
-	            //Then destroy this. This enforces our singleton pattern, meaning there can only ever be one instance of a GameManager.
-	            Destroy(gameObject);
+                //Then destroy this. This enforces our singleton pattern, meaning there can only ever be one instance of a GameManager.
+                Destroy(gameObject);
+            }
 
 	        //Sets this to not be destroyed when reloading scene
 	        DontDestroyOnLoad(gameObject);
@@ -61,7 +56,6 @@ namespace PaintCap
             screenChange.OnOrientationChange.AddListener(ResolutionChange);
             screenChange.OnResolutionChange.AddListener(ResolutionChange);
             initializeLevel();
-            
         }
 
         void initializeLevel()
@@ -76,25 +70,7 @@ namespace PaintCap
                 aggregateCapPos += position;
             }
             aggregateCapPos = aggregateCapPos / boardState.getCapturedPositions().Count;
-
-			Vector3 camMin = mainCam.ViewportToWorldPoint(new Vector3( mainCam.rect.xMin, mainCam.rect.yMin));
-			Vector3 camMax = mainCam.ViewportToWorldPoint(new Vector3( mainCam.rect.xMax, mainCam.rect.yMax));
-
-			// Target the camera to move so that bottom left is at 0,0
-			Vector3 targetPos = new Vector3 (mainCam.transform.position.x, mainCam.transform.position.y, mainCam.transform.position.z);
-			if (camMin.x > 0) {
-				targetPos -= new Vector3 (camMin.x, 0, 0);
-			}
-			if (camMin.y > 0) {
-				targetPos -= new Vector3 (0, camMin.y, 0);
-			}
-
-			Debug.Log(string.Format("camMin [{0}] camMax [{1}] ", camMin, camMax));
-            // move camera to endpos
-			targetLevelLoadPosEnd = targetPos; // new Vector3(aggregateCapPos.x, aggregateCapPos.y, mainCam.transform.position.z);
-            targetLevelLoadPosStart = mainCam.transform.position;
-            initializingLevel = true;
-            
+            levelInit.initLevel();
         }
 
         void ResolutionChange()
@@ -114,20 +90,15 @@ namespace PaintCap
         //Update is called every frame.
         void Update()
         {
-            if (initializingLevel)
+
+            if (levelInit.isInitializing())
             {
-                //move camera to bottom left over a few seconds
-                
-                timeThroughInit += Time.deltaTime;
-                if (timeThroughInit > INIT_TOTAL_TIME)
-                {
-                    initializingLevel = false;
-                }
-                else {
-                    float pctThroughAnimation = timeThroughInit < INIT_PAUSE_TIME ? 0 : (timeThroughInit - INIT_PAUSE_TIME) / INIT_ANIMATION_TIME;
-                    Vector3 smoothedPos = Vector3.Lerp(targetLevelLoadPosStart, targetLevelLoadPosEnd, pctThroughAnimation);
-                    mainCam.transform.position = smoothedPos;
-                }
+                return;
+            }
+
+            if (boardState.isLevelClear())
+            {
+                levelSelector.loadLevelSelect();
             }
             gameCounter++;
             if (gameCounter % 100 == 0)
@@ -140,11 +111,12 @@ namespace PaintCap
 			}
 			if (Input.GetKey("left ctrl") || Input.GetMouseButton(1))
 			{
+                //Debug.Log(string.Format("Co-ords of right click is [X: {0} Y: {1}]", pointClicked.x, pointClicked.y));
 				if (lastMousePos.HasValue)
                 {
                     Vector2 posDiff = mainCam.ScreenToWorldPoint(lastMousePos.Value) - mainCam.ScreenToWorldPoint(Input.mousePosition);
                     moveMainCam(posDiff);
-                    Debug.Log(string.Format("PosDiff {0} ", posDiff));
+                    //Debug.Log(string.Format("PosDiff {0} ", posDiff));
                 }
                 //Debug.Log(string.Format("Co-ords of right click is [X: {0} Y: {1}]", pointClicked.x, pointClicked.y));
                 lastMousePos = Input.mousePosition;
@@ -158,7 +130,7 @@ namespace PaintCap
                     Color color = tileState.getGameTile().getTileColor();
                     TileCapture bestTileMatch = boardState.processBombDrop(pointClicked, acm.getCurColor());
                     bombManager.addBomb(pointClicked, bestTileMatch, acm.getCurColor());
-                    Debug.Log(string.Format("Co-ords of mouse is [X: {0} Y: {1}] {2}", pointClicked.x, pointClicked.y, color.ToString()));
+                    //Debug.Log(string.Format("Co-ords of mouse is [X: {0} Y: {1}] {2}", pointClicked.x, pointClicked.y, color.ToString()));
                 }
             }
         }
@@ -171,7 +143,7 @@ namespace PaintCap
             Vector2 mainWorldMax = mainCam.ViewportToWorldPoint(new Vector3(mainCamRect.xMax, mainCamRect.yMax));
 
             Vector3 curPos = mainCam.transform.position; // mainCam.ScreenToWorldPoint(posDiff) // .transform.position;
-            Debug.Log(string.Format("xMin{0} yMin{1} xMax{2} yMax{3}", mainWorldMin.x, mainWorldMin.y, mainWorldMax.x, mainWorldMax.y));
+            //Debug.Log(string.Format("xMin{0} yMin{1} xMax{2} yMax{3}", mainWorldMin.x, mainWorldMin.y, mainWorldMax.x, mainWorldMax.y));
             if (mainWorldMin.x < -1f * OUT_OF_BOUNDS_VISUAL_GIVE && posDiff.x < 0)
             {
                 posDiff.x = 0;

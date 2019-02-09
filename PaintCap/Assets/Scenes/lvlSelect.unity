@@ -418,7 +418,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1519737926}
-        m_MethodName: LoadScene
+        m_MethodName: loadLevel
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -535,13 +535,13 @@ MonoBehaviour:
     m_HighlightedTrigger: Highlighted
     m_PressedTrigger: Pressed
     m_DisabledTrigger: Disabled
-  m_Interactable: 1
+  m_Interactable: 0
   m_TargetGraphic: {fileID: 1661244194}
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 1661244196}
-        m_MethodName: LoadScene
+        m_MethodName: loadLevel
         m_Mode: 3
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

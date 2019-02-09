@@ -7,8 +7,8 @@ namespace PaintCap
 {
 	public class BombManager : MonoBehaviour
 	{
-        private static int INITIAL_NUM_BOMBS = 4;
-        private static float BOMB_RECHARGE_TIME = 2f;
+        private static int INITIAL_NUM_BOMBS = 8;
+        private static float BOMB_RECHARGE_TIME = 1f;
 
 		List<ColorBomb> bombs = new List<ColorBomb>();
         public TileManager tileManager;
@@ -90,14 +90,34 @@ namespace PaintCap
             // bomb didn't have any matches, fade out
             if (endTile == null)
             {
-                fadeBombs();
+                float fadePct = Time.deltaTime / BOMB_FADE_TIME_S;
+                fadeBombs(fadePct);
             }
             else
             {
                 curSpeed += ACCEL_PER_SECOND * Time.deltaTime;
                 float moveAmount = Time.deltaTime * curSpeed;
+
+                engorgeBombs(moveAmount * getEngorgeFactor(bombDamage));
                 moveTowardsEnd(moveAmount);
             }
+        }
+
+        private float getEngorgeFactor(float bombDamage)
+        {
+            if (bombDamage == 1)
+            {
+                return 5;
+            }
+            else if (bombDamage > .8f)
+            {
+                return 3;
+            }
+            else if (bombDamage > .6f)
+            {
+                return 1.5f;
+            }
+            else return 1;
         }
 
         public void createBomb(Vector3 initialPos, TileCapture tileCapture, Color color, TileManager tileManager)
@@ -146,9 +166,8 @@ namespace PaintCap
             lr.endColor = newColor;
         }
 
-        private void fadeBombs()
+        private void fadeBombs(float fadePct)
         {
-            float fadePct = Time.deltaTime / BOMB_FADE_TIME_S;
             // fade the bomb away
             fadeBomb(colorRenderer, fadePct);
             fadeBomb(backgroundRenderer, fadePct);
@@ -182,6 +201,20 @@ namespace PaintCap
         {
             moveTowardsEndPos(moveAmount, colorRenderer);
             moveTowardsEndPos(moveAmount, backgroundRenderer);
+        }
+
+        void engorgeBombs(float engorgeAmount)
+        {
+            engorgeBomb(engorgeAmount, colorRenderer);
+            engorgeBomb(engorgeAmount, backgroundRenderer);
+        }
+
+        void engorgeBomb(float engorgeAmount, LineRenderer lr)
+        {
+            Vector3 mi = lr.transform.localScale;
+            mi.y += engorgeAmount;
+            mi.x += engorgeAmount;
+            lr.transform.localScale = mi;
         }
 
 		void moveTowardsEndPos(float moveAmount, LineRenderer lr) {

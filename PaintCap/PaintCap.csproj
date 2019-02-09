@@ -235,6 +235,7 @@
     <Compile Include="Assets\Scripts\BombManager.cs" />
     <Compile Include="Assets\Scripts\GameManager.cs" />
     <Compile Include="Assets\Scripts\GameTile.cs" />
+    <Compile Include="Assets\Scripts\LevelInit.cs" />
     <Compile Include="Assets\Scripts\LevelSelector.cs" />
     <Compile Include="Assets\Scripts\Loader.cs" />
     <Compile Include="Assets\Scripts\ScreenChange.cs" />
